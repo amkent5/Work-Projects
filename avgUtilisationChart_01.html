@@ -1,0 +1,219 @@
+<!--
+
+    Considerations:
+    - consider using a setChart function like done here: http://jsfiddle.net/zauberware/GfhLB/3/ (might be cleaner)
+    
+    Things Left to Do:
+    - add a line series to the first drilldown (day granularity) (this didn't seem to work when I tried it)
+    - on first chart if the resource below average colour bar red, otherwise green (did this - doesn't look great)
+    - add high lows to column charts
+    - click on pie chart to go to the scheduler screen for that day
+    
+-->
+
+<html>
+
+	<header>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+		<script src="http://code.highcharts.com/highcharts.js"></script>
+		<script src="https://code.highcharts.com/modules/drilldown.js"></script>
+		<script src="http://code.highcharts.com/modules/exporting.js"></script>
+	</header>
+
+	<script type="text/javascript">
+		$(function () {
+
+            var defaultTitle = 'Average Utilisation by Month';
+            var defaultSubtitle = 'click on bar to drilldown';
+            var drilldownTitle1 = 'Average Utilisation ';
+            var drilldownSubtitle1 = 'click on bar for utilisation split';
+            var drilldownTitle2 = 'Work Time Split ';
+            var drilldownSubtitle2 = 'click on series to go to scheduler screen';
+            var drilldownCounter = 0;
+            var drilldownMonth = '';
+            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+            var chart = new Highcharts.Chart({
+
+		        chart: {
+		            type: 'column',
+                    renderTo: container,
+                    events: {
+                        drilldown: function(e) {
+                            drilldownCounter = drilldownCounter + 1;
+
+                            if (drilldownCounter == 1) {
+                                var d = new Date(parseInt(e.point.x));
+                                var dstr = months[d.getMonth()] + ' ' + d.getFullYear();
+                                chart.setTitle({ text: drilldownTitle1 + dstr }, { text: drilldownSubtitle1 });
+
+                                // store the month so we can use it in the title if we return from drilldown2
+                                drilldownMonth = dstr;
+                            }
+                            else if (drilldownCounter == 2) {
+                                var d2 = new Date(parseInt(e.point.x));
+                                var d2str = d2.getDate() + ' ' + months[d2.getMonth()] + ' ' + d2.getFullYear();
+                                chart.setTitle({ text: drilldownTitle2 + d2str }, { text: drilldownSubtitle2 });
+                            }
+
+                            console.log(drilldownCounter);
+                        },
+                        drillup: function(e) {
+                            drilldownCounter = drilldownCounter - 1;
+
+                            if (drilldownCounter == 0) {
+                                chart.setTitle({ text: defaultTitle }, { text: defaultSubtitle });
+                            }
+                            else if (drilldownCounter == 1) {
+                                chart.setTitle({ text: drilldownTitle1 + drilldownMonth }, { text: drilldownSubtitle1 });
+                            }
+
+                            console.log(drilldownCounter);
+                        }
+                    },
+		        },
+		        title: {
+		            text: defaultTitle
+		        },
+                subtitle: {
+                    text: defaultSubtitle
+                },
+		        xAxis: {
+		            type: 'datetime'
+		        },
+		        yAxis: {
+		            labels: {
+	            		format: '{value}%'
+	                }
+		        },
+                plotOptions: {
+                    column: {
+                        cursor: 'pointer'
+                    },
+                    line: {
+
+                    },
+                    pie: {
+                        cursor: 'pointer',
+                        //allowPointSelect: true,
+                        datalabels: {
+                            enabled: true
+                        },
+                        showInLegend: true,
+                        point: {
+                            events: {
+                                click: function() { // on click of pie take to URL in new tab
+                                    console.log(this.series.chart);
+                                    //location.href = 'https://en.wikipedia.org/wiki/Minkowski_distance';
+                                    window.open("https://en.wikipedia.org/wiki/Minkowski_distance", "_blank");
+                                }
+                            }
+                        }
+                    }
+                },
+        		series: [{
+        			name: "Resource Utilisation",
+        			data: [{
+                        x: 1404172800000,   // 2014-07
+        				y: 85,
+                        //color: Highcharts.getOptions().colors[2],
+        				drilldown: 1404172800000
+        			}, {
+        				x: 1406851200000,   // 2014-08
+        				y: 77,
+                        //color: Highcharts.getOptions().colors[2],
+        				drilldown: 1406851200000
+        			}, {
+        				x: 1409529600000,   // 2014-09
+        				y: 63,
+                        //color: Highcharts.getOptions().colors[1],
+        				drilldown: 1409529600000
+        			}],
+        			type: "column",
+        			tooltip: {
+        				valueSuffix: '%'
+        			}
+        		}, {
+        			name: "Average Utilisation",
+        			data: [{
+        				x: 1404172800000,
+        				y: 77
+        			}, {
+        				x: 1406851200000,
+        				y: 75
+        			}, {
+        				x: 1409529600000,
+        				y: 69
+        			}],
+        			type: "line",
+        			tooltip: {
+        				valueSuffix: '%'
+        			}
+        		}],
+        		// http://www.onlineconversion.com/unix_time.htm
+        		drilldown: {
+                    // remove hyperlink formatting from axis labels
+                    activeAxisLabelStyle: {
+                        cursor: 'pointer',
+                        textDecoration: 'none'
+                    },
+        			series: [{
+        				id: 1404172800000,
+        				name: "Resource Utilisation per day",
+        				type: "column",
+                        tooltip: {
+                            valueSuffix: '%'
+                        },
+                        data: [{
+                            x: 1404172800000,   // 2014-07-01
+                            y: 85,
+                            drilldown: 'split'
+                        }, {
+                            x: 1404259200000,   // 2014-07-02
+                            y: 77
+                        }, {
+                            x: 1404345600000,   // 2014-07-03
+                            y: 63
+                        }, {
+                            x: 1404432000000,   // 2014-07-04
+                            y: 88
+                        }, {
+                            x: 1404518400000,   // 05
+                            y: 56
+                        }, {
+                            x: 1404604800000,   // 06
+                            y: 78
+                        }, {
+                            x: 1404691200000,   // 07
+                            y: 98
+                        }, {
+                            x: 1404777600000,   // 08
+                            y: 88
+                        }]
+        			}, {
+                        id: 'split',
+                        type: 'pie',
+                        tooltip: {
+                            valueSuffix: '%'
+                        },
+                        data: [{
+                            name: 'Free Space',
+                            y: 15
+                        }, {
+                            name: 'Appointment Time',
+                            y: 75
+                        }, {
+                            name: 'Drive Time',
+                            y: 10
+                        }]
+                    }]
+        		}
+            })
+
+        });
+
+	</script>
+
+	<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+
+</html>
