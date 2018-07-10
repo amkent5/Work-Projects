@@ -6,26 +6,7 @@ if object_id('tempdb..#res') is not null
 select coords.longitude
 	, coords.latitude
 into #res
-from [dbo].[Job]
-
-inner join Incident
-	on Job.incident_id = Incident.id
-inner join Site
-	on Incident.site_id = Site.site_id
-inner join Appointment as app
-	on Job.id = app.job_id
-inner join Resource as res
-	on app.resource_id = res.id
-inner join PostcodeCoordinates as coords
-	on Site.site_postcode_nospace = coords.postcode
-
-where res.name = '@Request.islResName~'
-	and Job.job_enddate is not null
-	
-	-- OAN-84 12/05/2015	
-	and (Job.job_enddate >= '@Request.islStartDate~' or '@Request.islStartDate~' = '')
-	and (Job.job_enddate <= '@Request.islEndDate~' or '@Request.islEndDate~' = '')
-
+from [dbo].[Table1]
 
 declare @XML as varchar(max) = '<?xml version="1.0"?><gpx version="1.0"><trk><trkseg>';
 declare @mapWidth as int = 200;
